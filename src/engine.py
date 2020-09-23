@@ -4,10 +4,10 @@ from tqdm import tqdm
 
 
 def loss_fn(outputs, targets):
-    return nn.BCEWithLogitsLoss()(outputs, targets)
+    return nn.BCEWithLogitsLoss()(outputs, targets.view(-1, 1))
 
 
-def train_fn(data_loader, model, optimizer, device):
+def train_fn(data_loader, model, optimizer, device, scheduler):
     model.train()
 
     for bi, d in tqdm(enumerate(data_loader), total=len(data_loader)):

@@ -4,8 +4,10 @@ import dataset
 import torch
 import torch.nn as nn
 import pandas as pd
+import numpy as np
 from model import BERTBaseUncased
 from sklearn import model_selection
+from sklearn import metrics
 from transformers import AdamW
 from transformers import get_linear_schedule_with_warmup
 
@@ -27,7 +29,7 @@ def run():
 
     train_dataset = dataset.BERTDataset(
         review=df_train.review.values,
-        target=df_train.target.values
+        target=df_train.sentiment.values
     )    
 
     train_data_loader = torch.utils.data.DataLoader(
@@ -38,7 +40,7 @@ def run():
 
     valid_dataset = dataset.BERTDataset(
         review=df_valid.review.values,
-        target=df_valid.target.values
+        target=df_valid.sentiment.values
     )    
 
     valid_data_loader = torch.utils.data.DataLoader(
@@ -49,11 +51,13 @@ def run():
 
     device = torch.device("cuda")
     model = BERTBaseUncased()  
+    model.to(device)
+
     param_optimizer = list(model.named_parameters())
     no_decay = ["bias", "LayerNorm.bias", "LayerNorm.weights"]
     optimizer_parameters = {
-        { 'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay), 'weight_decay':0.001]},
-        { 'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay), 'weight_decay':0.0]}
+        { 'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay':0.001},
+        { 'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay':0.0}
     }
 
     num_train_steps = int(len(df_train)/config.TRAIN_BATCH_SIZE * config.EPOCHS)
@@ -67,5 +71,17 @@ def run():
 
     best_accuracy = 0
     for epoch in range(config.EPOCHS):
+        engine.train_fn(train_data_loader, model, optimizer, device, scheduler)
+        outputs, targets = engine.eval_fn(valid_data_loader, model, device)
+        outputs = np.array(outputs) >= 0.5
+        accuracy = metrics.accuracy_score(targets, outputs)
+        print(f"Accuracy Score = {accuracy}")
+        if accuracy > best_accuracy:
+            torch.save(model.state_dict(), config.MODEL_PATH)
+            best_accuracy = accuracy
+
+if __name__ == "__main__":
+    run()
+
         
 
