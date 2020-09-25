@@ -1,9 +1,9 @@
 import transformers
 
 MAX_LEN = 512
-TRAIN_BATCH_SIZE = 8
-VALID_BATCH_SIZE = 8
-EPOCHS = 10
+TRAIN_BATCH_SIZE = 2
+VALID_BATCH_SIZE = 2
+EPOCHS = 1
 BERT_PATH = "../input/bert_base_uncased/"
 MODEL_PATH = "model.bin"
 TRAINING_FILE = "../input/imdb.csv"

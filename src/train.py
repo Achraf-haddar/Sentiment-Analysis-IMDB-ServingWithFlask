@@ -55,10 +55,10 @@ def run():
 
     param_optimizer = list(model.named_parameters())
     no_decay = ["bias", "LayerNorm.bias", "LayerNorm.weights"]
-    optimizer_parameters = {
+    optimizer_parameters = [
         { 'params': [p for n, p in param_optimizer if not any(nd in n for nd in no_decay)], 'weight_decay':0.001},
         { 'params': [p for n, p in param_optimizer if any(nd in n for nd in no_decay)], 'weight_decay':0.0}
-    }
+    ]
 
     num_train_steps = int(len(df_train)/config.TRAIN_BATCH_SIZE * config.EPOCHS)
     optimizer = AdamW(optimizer_parameters, lr=3e-5)
@@ -82,6 +82,3 @@ def run():
 
 if __name__ == "__main__":
     run()
-
-        
-
